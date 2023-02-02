@@ -6,5 +6,6 @@
 * 后端
     * Java
         * [MyBatis](./md/java/MyBatis.md)
-        * [Redis](.md/java/Redis.md)
+        * [springMVC](./md/java/springMVC.md)
+        * [Redis](./md/java/Redis.md)
     * Python
