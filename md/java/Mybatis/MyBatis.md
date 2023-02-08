@@ -1,3 +1,7 @@
+---
+typora-root-url: img
+---
+
 [TOC]
 # MyBatis简介
 [MyBatis官方文档](https://mybatis.org/mybatis-3/zh/)
@@ -101,6 +105,7 @@ SqlSessionFactory 对象一旦创建，就会在整个应用程序过程中始�
 ```
 ### SqlSession
 `SqlSession 是用于执行持久化操作的对象，类似于 JDBC 中的 Connection`
+
 ```java
 oid clearCache();
 Configuration getConfiguration();
@@ -110,6 +115,7 @@ int delete(String statement, Object parameter);
 ...
 ```
 `SqlSession 的用途主要有两种`
+
 1. 获取映射器。让映射器通过命名空间和方法名称找到对应的 SQL，并发送给数据库，执行后返回结果
 2. 直接通过“命名空间（namespace）+SQL id”的方式执行 SQL，不需要获取映射器
 `SqlSession生命周期和作用域`
@@ -281,22 +287,30 @@ Website website = websiteMapper.getWebsite(1);
 * MyBatis定义了缓存接口Cache，可以通过实现Cache接口来自定义二级缓存
 ### 一级缓存
 **在`参数`和` SQL` 完全一样时，使用同一个 SqlSession 对象调用同一个 mapper 的方法，执行一次 SQL**
-> 缓存失效的四种情况
+* 开启方式：默认开启
+* 作用范围：同一个SqlSession中
+* 脏数据处理：一旦执行增删改，立刻清空缓存
+> 一级缓存作用范围太小（在一个SqlSession，即一个事务内），没有太大价值
 
+> 缓存失效的四种情况
 1. 不同的SqlSession对应不同的一级缓存
 2. 同一个SqlSession但是参数不同
 3. 同一个SqlSession两次查询期间执行了任何一次增删改操作
 4. 同一个SqlSession两次查询期间手动清空了缓存
+
+![Mybatis一级缓存](..\img\Mybatis一级缓存.png)
+
 ### 二级缓存
+
 **二级缓存在 SqlSession 关闭或提交之后才会生效**
-> 使用步骤
-1. 全局配置文件中(mybatis-config.xml)开启二级缓存
+* 开启方式
+mybatis-config.xml
 ```XML
 <settings>
     <setting name="cacheEnabled" value="true" />
 </settings>
 ```
-2. mapper文件中配置二级缓存
+2. xxxMapper.xml
 ```XML
 <mapper namescape="net.biancheng.WebsiteMapper">
     <!-- cache配置 -->
@@ -308,7 +322,41 @@ Website website = websiteMapper.getWebsite(1);
     ...
 </mapper>
 ```
-![缓存机制](C:/Users/lenovo/Desktop/courses/Java/MyBatis/缓存机制.png)
+* 作用范围:同1个namespace（同1个Mapper接口类型）
+* 脏数据处理：一旦执行增删改，默认清空同1个namespace下的二级缓存
+> 自定义清空缓存策略
+```
+insert delete update select标签都有flushCache属性
+flushCache：true执行时清空缓存 false：不清空缓存
+insert delete update标签的flushCache默认值：true
+select标签的flushCache默认值：false
+```
+![Mybatis一级缓存](..\img\MyBatis二级缓存.png)
+
+###  ehcache
+`ehcache是由Java编写成熟的缓存组件，功能强大`
+* 引入依赖
+pom.xml
+```xml
+<dependency>
+	<groupId>org.mybatis.caches</groupId>
+	<artifactId>mybatis-ehcache</artifactId>
+	<version>1.2.0</version>
+</dependency>
+```
+* 开启缓存
+mybatis-config.xml
+```xml
+<settings>
+	<setting name="cacheEnabled" value="true"/>
+</settings>
+```
+xxxMapper.xml
+```xml
+<cache type="org.mybatis.caches.ehcache.EhcacheCache"/>
+```
+ehcache.xml
+直接复制到 main/resources根目录
 ## 插件开发
 
 # MyBatis使用
@@ -846,8 +894,74 @@ trim标签可以通过添加和忽略前缀、后缀更加灵活的实现动态S
 | 解析速度 |    慢    |        快        |
 
 # 扩展
-## 插件
+## PageHelper
+PageHelper利用mybatis拦截器的机制，实现分页查询。分页语句与数据库耦合，高可移植性，支持常见的 12种数据库的物理分页，并提供了多种使用方式。
+* pom.xml添加 PageHelper依赖
+```xml
+<dependency>
+	<groupId>com.github.pagehelper</groupId>
+	<artifactId>pagehelper</artifactId>
+	<version>5.2.0</version>
+</dependency>
+```
+* mybatis-config.xml配置，开启分页插件功能
+```xml
+<plugins>
+	<plugin interceptor="com.github.pagehelper.PageInterceptor">
+		<property name="helperDialect" value="mysql"/> <!-- helperDialect 设置数据库类型-->
+		<property name="supportMethodsArguments" value="true"/> <!-- 开启注解式分页功能-->
+	</plugin>
+</plugins>
+```
+* 使用插件分页
+```java
+// UserMapper.java
+public interface UserMapper {
+	public List<User> selectPageUsersWithNoArguments();
+}
+```
+```xml
+<!-- UserMapper.xml -->
+<select id="selectPageUsersWithNoArguments" resultType="user">
+select * from t_user
+</select>
+```
+```java
+// 基本使用
+PageHelper.startPage(1,5);//设置pageNum和pageSize
+List<User> users = userMapper.selectPageUsersWithNoArguments();//执行mapper的查询方法
+//将list包装成pageInfo方便获取更多分页数据，第1个参数限制生成的导航超链接页码的总个数
+PageInfo<User> pageInfo = new PageInfo<>(users,10);
+//2个核心方法
+pageInfo.getTotal();//获取总条数
+pageInfo.getPages();//获取总页数
+//1个实用方法
+//获取导航超链接页码数组，最多不会超过设置的10个页码
+int[] navigatepageNums = pageInfo.getNavigatepageNums();
+//多个封装的简化方法
+pageInfo.isIsFirstPage();//当前页是否是第1页
+pageInfo.isIsLastPage();//当前页是否是最后1页
+pageInfo.getPrePage();//前一页的页码
+pageInfo.getNextPage();//下一页的页码
+```
+
+```java
+// 简洁使用
+PageInfo<User> pageInfo2 = PageHelper.startPage(1, 5).doSelectPageInfo(() ->userMapper.selectPageUsersWithNoArguments());
+//offsetPage接收的不是pageNum和pageSize，而是limit后需要的2个数值
+PageInfo<User> pageInfo3 = PageHelper.offsetPage(0, 5).doSelectPageInfo(() ->userMapper.selectPageUsersWithNoArguments());
+```
+
+* 注解的使用方式
+```java
+public interface UserMapper {
+//将2个分页参数使用注解命名，必须为pageNum和pageSize
+public List<User> selectPageUsersWithNoArguments(@Param("pageNum")Integer pageNum,@Param("pageSize")Integer pageSize);
+}
+```
+
 ## 批量操作
+
 ## 存储过程
 ## typeHandler处理枚举
 # MyBatisPlus
