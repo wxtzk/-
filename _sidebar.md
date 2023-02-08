@@ -5,7 +5,7 @@
         * [mvn命令](md/nvm%E5%91%BD%E4%BB%A4.md)
 * 后端
     * Java
-        * [MyBatis](./md/java/MyBatis.md)
+        * [MyBatis](./md/java/MyBatis/MyBatis.md)
         * [springMVC](./md/java/springMVC.md)
         * [Redis](./md/java/Redis.md)
     * Python
