@@ -1,7 +1,3 @@
----
-typora-root-url: img
----
-
 [TOC]
 # MyBatis简介
 [MyBatis官方文档](https://mybatis.org/mybatis-3/zh/)
@@ -331,7 +327,7 @@ flushCache：true执行时清空缓存 false：不清空缓存
 insert delete update标签的flushCache默认值：true
 select标签的flushCache默认值：false
 ```
-![Mybatis一级缓存](..\img\MyBatis二级缓存.png)
+![Mybatis二级缓存](..\img\MyBatis二级缓存.png)
 
 ###  ehcache
 `ehcache是由Java编写成熟的缓存组件，功能强大`
