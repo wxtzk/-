@@ -5,6 +5,8 @@
         * [mvn命令](md/nvm%E5%91%BD%E4%BB%A4.md)
         * [Vue](./vue.md)
 * 后端
+    * mysql
+        * [mysql命令](md/mysql/mysql命令.md)
     * Java
         * [MyBatis](./md/java/MyBatis/MyBatis.md)
         * [springMVC](./md/java/springMVC.md)

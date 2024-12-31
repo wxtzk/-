@@ -5,3 +5,5 @@
 #### ⑤登录mysql:mysql -u root -p
 ##### Enter PassWord:(密码)
 #### ⑥修改密码:alter user'root'@'ocalhost' identified by'root';(by 接着的是密码)
+
+[配置文件](./my.ini)
